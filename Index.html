@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>بطل البيئة - مدرسة حليمة السعدية</title>
+<style>
+/* الحماية ضد النسخ */
+body{
+    margin:0;
+    font-family: Arial;
+    text-align:center;
+    overflow:hidden;
+    background: linear-gradient(-45deg,#87ceeb,#b2dfdb,#c8e6c9,#fff9c4);
+    background-size:400% 400%;
+    animation: bgMove 10s infinite alternate;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+@keyframes bgMove{
+    0%{background-position:0% 50%}
+    100%{background-position:100% 50%}
+}
+.schoolName{
+    font-size:20px;
+    background:#2e7d32;
+    color:white;
+    padding:10px;
+}
+.screen{display:none;padding:20px;}
+.active{display:block;}
+button{
+    padding:12px 20px;
+    font-size:18px;
+    margin:10px;
+    border:none;
+    border-radius:20px;
+    cursor:pointer;
+    background:#4caf50;
+    color:white;
+}
+button:hover{background:#1b5e20;}
+.character{
+    font-size:80px;
+    position:relative;
+    left:-200px;
+    transition:3s linear;
+}
+.school{font-size:120px;margin-top:40px;}
+.choice{
+    display:inline-block;
+    padding:15px 10px;
+    margin:10px;
+    font-size:16px;
+    border-radius:12px;
+    cursor:pointer;
+    background:white;
+    border:2px solid #555;
+    transition:0.3s;
+    width:100px;
+    height:80px;
+    vertical-align:top;
+    line-height:50px;
+}
+.choice:hover{
+    transform:scale(1.1);
+    background:#fff59d;
+}
+.trash-bin{background:#90a4ae;border-radius:12px;font-weight:bold;line-height:50px;}
+.garden{background:#a5d6a7;border-radius:12px;font-weight:bold;line-height:50px;}
+.bigMark{
+    font-size:120px;
+    position:fixed;
+    top:35%;
+    left:40%;
+}
+.correctMark{color:green;}
+.wrongMark{color:red;}
+.star{
+    font-size:50px;
+    color:gold;
+}
+.advice{
+    margin-top:20px;
+    font-size:18px;
+    background:#e8f5e9;
+    padding:15px;
+    border-radius:15px;
+    color:#1b5e20;
+}
+</style>
+</head>
+<body>
+
+<div class="schoolName">
+مدرسة حليمة السعدية الثانوية للبنات / الأغوار الشمالية
+</div>
+
+<!-- البداية -->
+<div id="start" class="screen active">
+    <h1>🌍 بطل البيئة 🌱</h1>
+    <h2>اختر شخصيتك</h2>
+    <button onclick="chooseCharacter('👦')">👦 ولد</button>
+    <button onclick="chooseCharacter('👧')">👧 بنت</button>
+</div>
+
+<!-- المشي -->
+<div id="walkScreen" class="screen">
+    <div id="walker" class="character"></div>
+    <div class="school">🏫</div>
+</div>
+
+<!-- اللعبة -->
+<div id="gameScreen" class="screen">
+    <h2 id="question"></h2>
+    <h3>
+        النقاط: <span id="score">0</span> |
+        الوقت: <span id="time">45</span>
+    </h3>
+    <div id="options"></div>
+    <div id="mark"></div>
+</div>
+
+<!-- شاشة المعلومات قبل النتيجة -->
+<div id="infoScreen" class="screen">
+    <h2>مدرسة حليمة السعدية الثانوية للبنات</h2>
+    <h3>مديرة المدرسة: آمنة غانم</h3>
+    <div class="advice">
+        "لا تلقي النفايات على الأرض، ضعها في مكانها المخصص"<br><br>
+        مبادرة سمو ولي العهد<br>
+        الأمير الحسين بن عبد الله الثاني
+    </div>
+    <br>
+    <strong>تصميم وفكرة مها الصمادي</strong>
+    <br><br>
+    <button onclick="showResult()">عرض النتيجة</button>
+</div>
+
+<!-- شاشة النتيجة -->
+<div id="resultScreen" class="screen">
+    <h1 id="endTitle"></h1>
+    <div id="stars"></div>
+    <h2>مجموع نقاطك: <span id="finalScore"></span></h2>
+    <div id="resultMessage" style="font-size:20px; margin:15px;"></div>
+    <button onclick="restartGame()">إعادة المحاولة</button>
+</div>
+
+<script>
+// حماية ضد النسخ أو التعديل
+document.addEventListener('contextmenu', e=>{e.preventDefault(); alert("نسخ الكود أو التعديل غير مسموح!");});
+document.addEventListener('keydown', e=>{
+  if((e.ctrlKey && (e.key==='s'|| e.key==='u'|| e.key==='c'))){ e.preventDefault(); alert("نسخ أو حفظ الصفحة غير مسموح!");}
+});
+
+// اللعبة
+let score=0, time=45, timer, stage=0, character="";
+const questions=[
+{text:"أين نرمي زجاجة البلاستيك؟",correct:"بلاستيك",options:["بلاستيك","زجاج","ورق","الأرض"]},
+{text:"أين نرمي الزجاجة الزجاجية؟",correct:"زجاج",options:["بلاستيك","زجاج","ورق","الأرض"]},
+{text:"أين نرمي الورقة؟",correct:"ورق",options:["بلاستيك","زجاج","ورق","الأرض"]},
+{text:"أين نرمي النفايات؟",correct:"سلة القمامة",options:["سلة القمامة","الأرض"]},
+{text:"أين نرمي علبة العصير؟",correct:"بلاستيك",options:["بلاستيك","زجاج","ورق","الأرض"]},
+{text:"أين نرمي القارورة الزجاجية؟",correct:"زجاج",options:["بلاستيك","زجاج","ورق","الأرض"]}
+];
+
+function chooseCharacter(char){
+    character=char;
+    document.getElementById("walker").innerHTML=char;
+    switchScreen("start","walkScreen");
+    setTimeout(()=>{ document.getElementById("walker").style.left="40%"; },100);
+    setTimeout(()=>{ startGame(); },3000);
+}
+
+function startGame(){ switchScreen("walkScreen","gameScreen"); startTimer(); loadQuestion(); }
+function switchScreen(hide,show){ document.getElementById(hide).classList.remove("active"); document.getElementById(show).classList.add("active"); }
+function startTimer(){ timer=setInterval(()=>{ time--; document.getElementById("time").innerText=time; if(time<=0) endGame(); },1000); }
+function loadQuestion(){ if(stage>=questions.length){ endGame(); return; } let q=questions[stage]; document.getElementById("question").innerText=q.text; let html=""; q.options.forEach(opt=>{ let cls = (opt==="الأرض") ? "choice garden" : "choice trash-bin"; html+=`<div class="${cls}" onclick="checkAnswer('${opt}')">${opt}</div>`; }); document.getElementById("options").innerHTML=html; }
+function checkAnswer(ans){ let q=questions[stage]; let mark=document.getElementById("mark"); mark.innerHTML=""; if(ans===q.correct){ score+=10; document.getElementById("score").innerText=score; mark.innerHTML="<div class='bigMark correctMark'>✅</div>"; } else{ mark.innerHTML="<div class='bigMark wrongMark'>❌</div>"; } setTimeout(()=>{ mark.innerHTML=""; stage++; loadQuestion(); },1000); }
+function endGame(){ clearInterval(timer); switchScreen("gameScreen","infoScreen"); }
+function showResult(){ switchScreen("infoScreen","resultScreen"); document.getElementById("finalScore").innerText=score; let stars=document.getElementById("stars"); stars.innerHTML=""; let starCount=Math.floor(score/20); for(let i=0;i<starCount;i++){ stars.innerHTML+="<span class='star'>⭐</span>"; } let resultMessage=document.getElementById("resultMessage"); let endTitle=document.getElementById("endTitle"); if(score<20){ endTitle.innerHTML="🌱 حاول مرة أخرى"; resultMessage.innerHTML="عليك أن تثابر أكثر للحفاظ على النظافة"; resultMessage.style.color="red"; } else{ endTitle.innerHTML="🎉 أحسنت! أنت مثال للنظافة"; resultMessage.innerHTML="أداء رائع! حافظ على البيئة 🌍"; resultMessage.style.color="green"; } }
+function restartGame(){ score=0; time=45; stage=0; document.getElementById("score").innerText=0; document.getElementById("time").innerText=45; document.getElementById("walker").style.left="-200px"; switchScreen("resultScreen","start"); }
+</script>
+</body>
+</html>
